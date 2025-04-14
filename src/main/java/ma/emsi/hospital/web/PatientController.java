@@ -15,70 +15,33 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
+@AllArgsConstructor
 public class PatientController {
 
-    @Autowired
     private PatientRepository patientRepository;
+
     @GetMapping("/index")
     public String index(Model model,
-                        @RequestParam(name="page", defaultValue = "0") int page,
-                        @RequestParam(name="size", defaultValue = "4") int size,
-                        @RequestParam(name="keyword", defaultValue = "") String kw
-
-    ) {
-        Page<Patient> pagepatients = patientRepository.findByNomContains(kw, PageRequest.of(page, size));
-        model.addAttribute("listPatients", pagepatients.getContent());
-        model.addAttribute("pages", new int[pagepatients.getTotalPages()]);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("keyword", kw);
-        return "patient";
+                        @RequestParam(value = "page",defaultValue = "0") int p
+            ,@RequestParam(value = "size",defaultValue = "4") int s
+            ,@RequestParam(value = "keyword",defaultValue = "") String kw) {
+        Page<Patient> pagePatients = patientRepository.findByNomContains(kw,PageRequest.of(p,s));
+        model.addAttribute("listPatients", pagePatients.getContent());
+        model.addAttribute("pages",new int[pagePatients.getTotalPages()]);
+        model.addAttribute("currentPage",p);
+        model.addAttribute("keyword",kw);
+        return "patients";
     }
     @GetMapping("/delete")
-    public String delete(@RequestParam(name="id") Long id,@RequestParam(name="keyword", defaultValue = "")
-                         String keyword,
-                         @RequestParam(name="page", defaultValue = "0")  int page){
-
+    public String delete(@RequestParam(name ="id") Long id,
+                         @RequestParam(name ="keyword" ,defaultValue = "") String keyword,
+                         @RequestParam(name ="page" ,defaultValue = "0") String page ) {
         patientRepository.deleteById(id);
         return "redirect:/index?page="+page+"&keyword="+keyword;
     }
-
     @GetMapping("/")
-    public String home(){
+    public String home() {
         return "redirect:/index";
     }
-    @GetMapping("/formPatients")
-    public String formPatient(Model model){
-
-        model.addAttribute("patient", new Patient());
-        return "formPatients";
-    }
-
-    @PostMapping("/save")
-    public String save(Model model,  Patient patient, BindingResult bindingResult,
-                       @RequestParam(defaultValue = "0") int page ,
-                       @RequestParam(defaultValue = "") String keyword){
-        if(bindingResult.hasErrors()){ return "formPatients";}
-        patientRepository.save(patient);
-        return "redirect:/index?page="+page+"&keyword="+keyword;
-    }
-    @GetMapping("/editPatient")
-    public String editPatient(Model model, @RequestParam(name="id") Long id,String keyword , int page) {
-        Patient patient = patientRepository.findById(id).orElse(null);
-        if(patient == null) {
-            throw new RuntimeException("Patient introuvable");
-        }
-        model.addAttribute("patient", patient);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("page", page);
-        return "editPatient";
-    }
-
-    @GetMapping("/index/{id}")
-    public String viewPatient(@PathVariable("id") Long id, Model model){
-        Patient patient = patientRepository.findById(id).get();
-        model.addAttribute("patient", patient);
-        return "viewPatient";
-    }
-
 
 }
